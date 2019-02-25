@@ -16,7 +16,7 @@ from tkinter import font
 class WordPlayerUI:
     def __init__(self):
         self.root = Tk()
-        self.root.minsize(820, 500)
+        self.root.minsize(600, 500)
         self.root.title('WordPlayer')
         self.ft = lambda x=15: font.Font(font=('Microsoft YaHei', x, 'normal'))
         # 以下菜单部分分为  出题词库、题目形式、附加功能、其他信息
@@ -52,32 +52,40 @@ class WordPlayerUI:
         m41.add_command(label="登录", command=self.LoginOrRegister)
         m41.add_command(label="注册", command=self.LoginOrRegister)
         m4.add_command(label='退出', command=self.QuitMe)
-        # 下面的frame用来输出用户答题的判断结果
-        Frame(self.root, height=125, width=600, bd=4, bg='DarkGray').place(x=0, y=380)
+
         # 下面的构件主要是 错词展示栏(mis_words)和当前时间栏(timebar)
-        self.mis_count = 0  # 错题数量
-        self.ques_count = 0  # 总题目数
-        self.mis_bar = Frame(self.root, height=500, width=200, bd=4, bg='DimGray')
-        self.mis_bar.place(x=600, y=0)
-        Label(self.mis_bar, text='   <错词展示栏>   0|0', font=self.ft(13), fg='yellow', bg='DimGray').place(x=0, y=0)
-        self.mis_words = Listbox(self.mis_bar, height=480, width=300, fg='red', bg='SkyBlue')
-        for i in range(700):
-            self.mis_words.insert(1, ' ')
         self.sl = Scrollbar(self.root)
         self.sl.pack(side=RIGHT, fill=Y)
+
+        self.mis_count = 0  # 错题数量
+        self.ques_count = 0  # 总题目数
+        self.mis_bar = Frame(self.root, height=500, width=250, bd=4, bg='DimGray')
+        self.mis_bar.pack(side=RIGHT)
+        Label(self.mis_bar, text='   <错词展示栏>   0|0', font=self.ft(13), fg='yellow', bg='DimGray').place(x=0, y=0)
+        self.mis_words = Listbox(self.mis_bar, height=480, width=300, fg='red', bg='SkyBlue')
+
+        for i in range(700):
+            self.mis_words.insert(1, ' ')
+
         self.mis_words['yscrollcommand'] = self.sl.set
         self.sl['command'] = self.mis_words.yview
         self.mis_words.place(x=0, y=30)
+
         # 时间栏
         self.timebar = Label(self.mis_bar, text="", height=2, width=28, bg='#383838', fg='white')
         self.timebar.place(x=0, y=460)
+
         # 本地词典
         self.local_dict = self.LoadLocalDict()
         self.UpdateClock()
+
         # 用户
         self.user = "Anonymous"
         if not os.path.exists(os.path.join(users_data_path, self.user)):
             os.mkdir(os.path.join(users_data_path, self.user))
+
+        # 绑定键
+        self.root.bind("<Escape>",lambda x: self.root.destroy())
         self.root.mainloop()
 
     def LoadLocalDict(self):
@@ -138,43 +146,41 @@ class WordPlayerUI:
         def ques():
             global v
             self.GetWords()
-            f1 = Frame(frame, bd=4, relief="groove", height=100, width=100)
-            f1.place(x=150, y=100)
-            Label(f1, text=self.expre, height=3, width=25, font=self.ft()).grid()
+            f = Frame(frame, bd=4, relief="groove", height=100)
+            f.place(x=10, y=30)
+            Label(f, text=self.expre, height=3, width=25, font=self.ft()).grid()
             v = StringVar()
-            e = Entry(f1, width=25, bd=2, textvariable=v)
+            e = Entry(f, width=25, bd=2, textvariable=v)
             e.bind('<Return>', lambda x: judge())
             e.grid()
             e.focus_set()
-            Label(f1, text=' ').grid()
+            Label(f, text=' ').grid()
 
         # 判断
         def judge():
-            f1 = Frame(self.root, height=125, width=600, bd=4, bg='DarkGray')
-            f1.place(x=0, y=380)
+            f = Frame(self.root, height=125, bd=2)
+            f.place(x=0, y=380)
 
-            f2 = Frame(f1, relief="groove", height=100, width=100)
-            f2.place(x=180, y=0)
             if v.get() == '' or v.get().strip().lower() != self.word:  # 答错则保存到错词本
                 with open(os.path.join(users_data_path, self.user, f'{self.user}_mis_words.txt'), 'a+',
-                          encoding='utf-8') as f:
+                          encoding='utf-8') as ff:
                     item = f'{self.word}    {self.expre}\n'
-                    f.write(item)
-                wrong_ans = Label(f2, text=f'回答错误!\n正确答案是 {self.word}\n已为您添加至错词本！', width=25, font=self.ft())
-                wrong_ans.grid()
+                    ff.write(item)
+                Label(f, text=f'回答错误!\n正确答案是 {self.word}\n已为您添加至错词本！', width=25, font=self.ft()).grid()
                 self.mis_words.insert(0, item)  # 答错的词显示在"错词展示栏"界面
                 self.mis_count += 1
             else:
-                Label(f2, text='回答正确！', width=25, font=1).grid()
+                Label(f, text='回答正确！', width=25, font=1).grid()
+
             self.ques_count += 1
             ques()
             Label(self.mis_bar, text=f'   <错词展示栏>   {self.mis_count}|{self.ques_count}', font=self.ft(13),
                   fg='yellow', bg='DimGray').place(x=0, y=0)
 
-        frame = Frame(self.root, height=380, width=600, bd=4, bg='PaleGreen')
+        frame = Frame(self.root, height=380, width=300, bd=2)
         frame.place(x=0, y=0)
         ques()
-        Button(frame, text='确认', bd=2, width=8, command=judge).place(x=250, y=300)
+        Button(frame, text='确认', bd=2, width=8, command=judge).place(x=100, y=200)
 
     def XuanZeTi(self, mode):
         if self.GetWords() is None:  # 防止用户未选词库就点击题型
@@ -196,13 +202,13 @@ class WordPlayerUI:
             A, B, C, D = ops
             right_item = ops.index(right_ans)
 
-            f3 = Frame(frame, bd=4, relief="groove", height=100, width=100)
-            f3.place(x=180, y=80)
-            Label(f3, text=center, width=20, font=self.ft(), bd=2).grid()
-            rb1 = Radiobutton(f3, text=A, variable=v, value=0, height=1, font=self.ft())
-            rb2 = Radiobutton(f3, text=B, variable=v, value=1, height=1, font=self.ft())
-            rb3 = Radiobutton(f3, text=C, variable=v, value=2, height=1, font=self.ft())
-            rb4 = Radiobutton(f3, text=D, variable=v, value=3, height=1, font=self.ft())
+            f = Frame(frame, bd=4, relief="groove", height=100)
+            f.place(x=20, y=30)
+            Label(f, text=center, width=20, font=self.ft(), bd=2).grid()
+            rb1 = Radiobutton(f, text=A, variable=v, value=0, height=1, font=self.ft())
+            rb2 = Radiobutton(f, text=B, variable=v, value=1, height=1, font=self.ft())
+            rb3 = Radiobutton(f, text=C, variable=v, value=2, height=1, font=self.ft())
+            rb4 = Radiobutton(f, text=D, variable=v, value=3, height=1, font=self.ft())
             rb1.bind('<Double-Button-1>', lambda x: judge())
             rb2.bind('<Double-Button-1>', lambda x: judge())
             rb3.bind('<Double-Button-1>', lambda x: judge())
@@ -214,34 +220,35 @@ class WordPlayerUI:
 
         # 判断
         def judge():
-            f = Frame(self.root, height=125, width=600, bd=4, bg='DarkGray')
+            f = Frame(self.root, height=125, bd=2)
             f.place(x=0, y=380)
-            f4 = Frame(f, relief="groove", height=100, width=100)
-            f4.place(x=180, y=0)
+            # f4 = Frame(f, relief="groove", height=100, width=100)
+            # f4.place(x=180, y=0)
             if v.get() == right_item:
-                Label(f4, text='回答正确！', width=25, font=self.ft()).grid()
+                Label(f, text='回答正确！', width=25, font=self.ft()).grid()
             else:  # 答错则保存到错词本 "
                 with open(os.path.join(users_data_path, self.user, f'{self.user}_mis_words.txt'), 'a+',
-                          encoding='utf-8') as f:
+                          encoding='utf-8') as ff:
                     if mode == 1:
                         item = f'{center}    {right_ans}\n'
                     else:
                         item = f'{right_ans}    {center}\n'
-                    f.write(item)
-                wrong_ans = Label(f4, text=f'回答错误!\n正确答案 {right_ans}\n已添加至错词本！', width=30, font=self.ft())
-                wrong_ans.grid()
+                    ff.write(item)
+
+                Label(f, text=f'回答错误!\n正确答案 {right_ans}\n已添加至错词本！', width=30, font=self.ft()).grid()
                 self.mis_words.insert(0, item)
                 self.mis_count += 1
+
             ques(mode)
             self.ques_count += 1
             # 更新 "错词展示栏"
             Label(self.mis_bar, text=f'   <错词展示栏>   {self.mis_count}|{self.ques_count}', font=self.ft(13), fg='yellow',
                   bg='DimGray').place(x=0, y=0)
 
-        frame = Frame(self.root, height=380, width=600, bd=4, bg='PaleGreen')
+        frame = Frame(self.root, height=380, width=300, bd=2)
         frame.place(x=0, y=0)
         ques(mode)
-        Button(frame, text='确认', bd=2, width=8, command=judge).place(x=265, y=300)
+        Button(frame, text='确认', bd=2, width=8, command=judge).place(x=100, y=300)
 
     def LookupWord(self, word):
         """本地查词"""
