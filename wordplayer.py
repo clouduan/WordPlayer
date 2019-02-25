@@ -15,7 +15,6 @@ from tkinter import font
 
 class WordPlayerUI:
     def __init__(self):
-        self.user = "Anonymous"
         self.root = Tk()
         self.root.minsize(820, 500)
         self.root.title('WordPlayer')
@@ -75,20 +74,24 @@ class WordPlayerUI:
         # 本地词典
         self.local_dict = self.LoadLocalDict()
         self.UpdateClock()
+        # 用户
+        self.user = "Anonymous"
+        if not os.path.exists(os.path.join(users_data_path, self.user)):
+            os.mkdir(os.path.join(users_data_path, self.user))
         self.root.mainloop()
-    
+
     def LoadLocalDict(self):
         """加载本地词典"""
         with open(os.path.join(lexicon_path, 'LocalDict.json'), encoding="utf-8") as f:
             local_dict = json.load(f)
         return local_dict
-    
+
     def UpdateClock(self):
         """更新时间栏"""
         now = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         self.timebar.configure(text=now)
         self.root.after(1000, self.UpdateClock)
-    
+
     def GetFiles(self, fname=None):
         """打开词库文件，读取所有行(每行只有一个单词及其翻译)"""
         if fname:
@@ -99,14 +102,14 @@ class WordPlayerUI:
             if not fname:
                 messagebox.showwarning('Warning', "未选择文件!")
                 return
-        
+
         try:
             with open(fname, encoding='utf-8') as f:
                 self.lines = f.readlines()
         except:
             messagebox.showerror('Error', f'打开文件失败\n{sys.exc_info()[1]}')
             return
-    
+
     def GetWords(self):
         """从之前的列表中选单词作为出题单词"""
         self.aLine = self.word = self.expre = self.word1 = self.word2 = self.word3 = self.expre1 = self.expre2 = self.expre3 = ""
@@ -125,12 +128,12 @@ class WordPlayerUI:
             except:
                 return None  # 可表明用户没有选词库
         return True
-    
+
     def TianKongTi(self):
         if not self.GetWords():  # 防止用户未选词库就点击题型
             messagebox.showerror(message='请先选择词库！')
             return
-        
+
         # 出题
         def ques():
             global v
@@ -144,12 +147,12 @@ class WordPlayerUI:
             e.grid()
             e.focus_set()
             Label(f1, text=' ').grid()
-        
+
         # 判断
         def judge():
             f1 = Frame(self.root, height=125, width=600, bd=4, bg='DarkGray')
             f1.place(x=0, y=380)
-            
+
             f2 = Frame(f1, relief="groove", height=100, width=100)
             f2.place(x=180, y=0)
             if v.get() == '' or v.get().strip().lower() != self.word:  # 答错则保存到错词本
@@ -167,18 +170,18 @@ class WordPlayerUI:
             ques()
             Label(self.mis_bar, text=f'   <错词展示栏>   {self.mis_count}|{self.ques_count}', font=self.ft(13),
                   fg='yellow', bg='DimGray').place(x=0, y=0)
-        
+
         frame = Frame(self.root, height=380, width=600, bd=4, bg='PaleGreen')
         frame.place(x=0, y=0)
         ques()
-        Button(frame, text='确认', bd=2, width=8, command=judge).place(x=265, y=250)
-    
+        Button(frame, text='确认', bd=2, width=8, command=judge).place(x=250, y=300)
+
     def XuanZeTi(self, mode):
         if self.GetWords() is None:  # 防止用户未选词库就点击题型
             messagebox.showerror(message='请先选择词库！')
             return
         messagebox.showwarning(title='Tips', message='对着选项双击左键即可判断并切换')
-        
+
         # 出题
         def ques(mode):
             global v, center, right_item, right_ans
@@ -192,7 +195,7 @@ class WordPlayerUI:
             random.shuffle(ops)  # 打乱顺序
             A, B, C, D = ops
             right_item = ops.index(right_ans)
-            
+
             f3 = Frame(frame, bd=4, relief="groove", height=100, width=100)
             f3.place(x=180, y=80)
             Label(f3, text=center, width=20, font=self.ft(), bd=2).grid()
@@ -208,7 +211,7 @@ class WordPlayerUI:
             rb2.grid(stick=W)
             rb3.grid(stick=W)
             rb4.grid(stick=W)
-        
+
         # 判断
         def judge():
             f = Frame(self.root, height=125, width=600, bd=4, bg='DarkGray')
@@ -234,15 +237,15 @@ class WordPlayerUI:
             # 更新 "错词展示栏"
             Label(self.mis_bar, text=f'   <错词展示栏>   {self.mis_count}|{self.ques_count}', font=self.ft(13), fg='yellow',
                   bg='DimGray').place(x=0, y=0)
-        
+
         frame = Frame(self.root, height=380, width=600, bd=4, bg='PaleGreen')
         frame.place(x=0, y=0)
         ques(mode)
         Button(frame, text='确认', bd=2, width=8, command=judge).place(x=265, y=300)
-    
+
     def LookupWord(self, word):
         """本地查词"""
-        
+
         def haici(word):
             """用 海词 查单词"""
             headers = {
@@ -252,7 +255,7 @@ class WordPlayerUI:
             s = requests.session()
             s.headers.update(headers)
             url = 'http://dict.cn/' + word
-            
+
             p1 = re.compile('<ul class="dict-basic-ul">([\s\S]*?)</ul>')
             p2 = re.compile('<span>(.*)</span>')
             p3 = re.compile('<strong>(.*)</strong>')
@@ -267,9 +270,9 @@ class WordPlayerUI:
                 return trans
             else:
                 return
-        
+
         return self.local_dict.get(word) or haici(word)
-    
+
     def AddWord(self):
         def addit():
             word = v.get().lower()
@@ -286,7 +289,7 @@ class WordPlayerUI:
                     Label(top, text='查无此词！').grid(row=2)
             v.set('')
             e.focus_set()
-        
+
         top = Toplevel()
         top.wm_attributes('-topmost', 1)  # 使查词的子窗口始终置于最前面
         v = StringVar()
@@ -298,7 +301,7 @@ class WordPlayerUI:
         btn = Button(top, text='确认', command=addit)
         btn.grid()
         Label(top, text='').grid(row=2)
-    
+
     def SearchWord(self):
         def searchit():
             word = v.get().lower()
@@ -311,7 +314,7 @@ class WordPlayerUI:
                 messagebox.showinfo(title='查询结果', message='未查到该单词释义！')
             v.set('')
             e.focus_set()
-        
+
         top = Toplevel()
         top.wm_attributes('-topmost', 1)  # 子窗口置于最前面
         v = StringVar()
@@ -322,14 +325,14 @@ class WordPlayerUI:
         e.focus_set()
         btn = Button(top, text='确认', command=searchit)
         btn.grid()
-    
+
     def ProcessWord(self):
         """批量查单词，待查单词应该是每行一个单词的文本文件"""
         fname = filedialog.askopenfilename(filetypes=[("all files", "*")], initialdir='./RawWords/')
         if not fname:
             messagebox.showwarning('Warning', "未选择文件!")
             return
-        
+
         try:
             with open(fname, encoding='utf-8') as f:
                 word_list = sorted(list(set(f.readlines())))
@@ -337,10 +340,10 @@ class WordPlayerUI:
         except:
             messagebox.showerror('Error', f'无法打开文件\n{sys.exc_info()}')
             return
-        
+
         count_of_words = len(word_list)
         fname = os.path.basename(fname)
-        
+
         start = time.time()
         failed_words = []
         with open(os.path.join(lexicon_path, fname), 'w', encoding='utf-8') as f:
@@ -351,14 +354,14 @@ class WordPlayerUI:
                     f.write(f'{word}     {trans}\n')
                 else:
                     failed_words.append(word)
-        
+
         with open(os.path.join(lexicon_path, (f'failed_words-{fname}')), 'w', encoding='utf-8') as f:
             for word in failed_words:
                 f.write(word + '\n')
         time_cost = time.time() - start
-        
+
         messagebox.showinfo(message=f'用时{time_cost:.2f}秒\n处理单词共{count_of_words}条\n请在 Lexicons 文件夹中查看')
-    
+
     def AnalyseArticle(self, reference):
         """从英文文章中分析出四六级单词"""
         """
@@ -368,7 +371,7 @@ class WordPlayerUI:
         if not fname:
             messagebox.showwarning('Warning', "未选择文件!")
             return
-        
+
         try:
             with open(fname, encoding="utf-8") as f:
                 data = f.read().lower()
@@ -379,7 +382,7 @@ class WordPlayerUI:
         except:
             messagebox.showerror('Error', f'无法打开文件\n{sys.exc_info()[1]}')
             return
-        
+
         count_of_words = 0
         start = time.time()
         with open(os.path.join('Articles', os.path.basename(fname)), 'a+', encoding='utf-8') as f:  # 用来存放分析出的单词
@@ -392,13 +395,13 @@ class WordPlayerUI:
                     count_of_words += 1
             time_cost = time.time() - start
         messagebox.showinfo(message=f'用时{time_cost:.2f}秒\n析出单词共{count_of_words}条\n请在 Articles 文件夹中查看')
-    
+
     def About(self):
         """软件信息"""
-        
+
         def openlink(event):
-            webbrowser.open_new("https://voldikss/github.io")
-        
+            webbrowser.open_new("https://voldikss.github.io")
+
         top = Toplevel()
         top.focus_set()
         top.bind('<Return>', lambda x: top.destroy())
@@ -412,7 +415,7 @@ class WordPlayerUI:
         lbox.insert(5, '@Website: voldikss.github.io(双击打开)')
         lbox.grid(padx=3, pady=4)
         top.mainloop()
-    
+
     def UserInfo(self):
         """用户信息"""
         top = Toplevel()
@@ -423,7 +426,7 @@ class WordPlayerUI:
         lbox.insert(1, self.user)
         lbox.grid(padx=3, pady=4)
         top.mainloop()
-    
+
     def LoginOrRegister(self):
         def action():
             get_name = name.get().strip()
@@ -453,7 +456,7 @@ class WordPlayerUI:
                             json.dump(accounts, f)
                         # 创建个人文件夹
                         os.mkdir(os.path.join(users_data_path, self.user))
-                
+
                 # 用户选择登录，验证用户信息
                 elif v.get() == 1:
                     if get_name in accounts:
@@ -470,19 +473,19 @@ class WordPlayerUI:
                         return
             # 成功登录后注销窗口
             top.destroy()
-        
+
         def encrypt(str):
             """采用 md5 加密"""
             md5 = hashlib.md5()
             md5.update(str.encode('utf-8'))
             return md5.hexdigest()
-        
+
         def re_enter():
             """清空原先输入内容"""
             name.set('')
             pswd.set('')
             e1.focus_set()
-        
+
         top = Toplevel()
         top.wm_attributes('-topmost', 1)
         top.geometry('300x125')
@@ -504,7 +507,7 @@ class WordPlayerUI:
         Button(top, text='确认', command=action).grid(row=5, column=1)
         Button(top, text='重输', command=re_enter).grid(row=5, column=2, sticky=E)
         top.mainloop()
-    
+
     def QuitMe(self):
         self.root.destroy()
 
@@ -513,5 +516,5 @@ if __name__ == '__main__':
     dir_path = os.path.dirname(os.path.abspath(__file__))
     lexicon_path = os.path.join(dir_path, "Lexicons")
     users_data_path = os.path.join(dir_path, "UsersData")
-    
+
     wp = WordPlayerUI()
