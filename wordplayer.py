@@ -164,7 +164,7 @@ class WordPlayerUI:
             if v.get() == '' or v.get().strip().lower() != self.word:  # 答错则保存到错词本
                 with open(os.path.join(users_data_path, self.user, f'{self.user}_mis_words.txt'), 'a+',
                           encoding='utf-8') as ff:
-                    item = f'{self.word}    {self.expre}\n'
+                    item = f'{self.word:<20}{self.expre}\n'
                     ff.write(item)
                 Label(f, text=f'回答错误!\n正确答案是 {self.word}\n已为您添加至错词本！', width=25, font=self.ft()).grid()
                 self.mis_words.insert(0, item)  # 答错的词显示在"错词展示栏"界面
@@ -230,9 +230,9 @@ class WordPlayerUI:
                 with open(os.path.join(users_data_path, self.user, f'{self.user}_mis_words.txt'), 'a+',
                           encoding='utf-8') as ff:
                     if mode == 1:
-                        item = f'{center}    {right_ans}\n'
+                        item = f'{center:<20}{right_ans}\n'
                     else:
-                        item = f'{right_ans}    {center}\n'
+                        item = f'{right_ans:<20}{center}\n'
                     ff.write(item)
 
                 Label(f, text=f'回答错误!\n正确答案 {right_ans}\n已添加至错词本！', width=30, font=self.ft()).grid()
@@ -278,7 +278,8 @@ class WordPlayerUI:
             else:
                 return
 
-        return self.local_dict.get(word) or haici(word)
+        trans =  self.local_dict.get(word) or haici(word)
+        return trans.replace('\n','').strip()
 
     def AddWord(self):
         def addit():
@@ -289,7 +290,7 @@ class WordPlayerUI:
             with open(os.path.join(users_data_path, self.user, f'{self.user}_add_words.txt'), 'a+',
                       encoding='utf-8') as f:
                 if trans != None:
-                    item = f'{word}      {trans}\n'
+                    item = f'{word:<20}{trans}\n'
                     f.write(item)  # 论编码的重要性，，，
                     Label(top, text='成功加入！').grid(row=2)
                 else:
@@ -358,7 +359,7 @@ class WordPlayerUI:
                 word = word.strip()
                 trans = self.LookupWord(word)
                 if trans:
-                    f.write(f'{word}     {trans}\n')
+                    f.write(f'{word:<20}{trans}\n')
                 else:
                     failed_words.append(word)
 
@@ -397,7 +398,7 @@ class WordPlayerUI:
                 word = line.strip().split()[0]
                 trans = line.strip().split()[1]
                 if word in data:
-                    item = f'{word}    {trans}\n'
+                    item = f'{word:<20}{trans}\n'
                     f.write(item)
                     count_of_words += 1
             time_cost = time.time() - start
